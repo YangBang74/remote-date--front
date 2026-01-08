@@ -1,5 +1,11 @@
 @import 'tailwindcss';
-@import "tw-animate-css";
+@import 'tw-animate-css';
+@import '@/shared/assets/styles/fonts.css';
+
+body {
+  font-size: clamp(0.75rem, 1vw, 1rem);
+  font-family: 'Google Sans', sans-serif;
+}
 
 @custom-variant dark (&:is(.dark *));
 
