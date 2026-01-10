@@ -1,13 +1,24 @@
 <script setup lang="ts">
-import { Header, Footer } from '@/widgets'
+import { Sidebar, Footer } from '@/widgets'
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/shared/ui/sidebar'
 import { RouterView } from 'vue-router'
+import { ThemeToggle } from '@/shared/ui/theme-toggle'
 </script>
 <template>
-  <div class="flex flex-col justify-between min-h-screen">
-    <Header />
-    <div class="flex-1">
-      <RouterView />
+  <SidebarProvider>
+    <div class="flex min-h-screen w-full">
+      <Sidebar />
+
+      <SidebarInset>
+        <header class="flex justify-between bg-sidebar md:h-14 h-12 shrink-0 items-center gap-2 border-b px-4">
+          <SidebarTrigger class="-ml-1" />
+          <ThemeToggle />
+        </header>
+        <div class="flex flex-1 flex-col">
+          <RouterView class="flex-1" />
+          <Footer />
+        </div>
+      </SidebarInset>
     </div>
-    <Footer />
-  </div>
+  </SidebarProvider>
 </template>
