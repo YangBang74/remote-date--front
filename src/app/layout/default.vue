@@ -10,7 +10,7 @@ import { ThemeToggle } from '@/shared/ui/theme-toggle'
       <Sidebar />
 
       <SidebarInset>
-        <header class="flex justify-between bg-sidebar md:h-14 h-12 shrink-0 items-center gap-2 border-b px-4">
+        <header class="flex justify-between md:h-14 h-12 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger class="-ml-1" />
           <ThemeToggle />
         </header>

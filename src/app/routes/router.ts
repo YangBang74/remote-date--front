@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { HomePage, AboutPage } from '@/pages'
+import { HomePage, AboutPage, RoomPage } from '@/pages'
 import DefaultLayout from '@/app/layout/default.vue'
 
 const router = createRouter({
@@ -11,6 +11,7 @@ const router = createRouter({
       children: [
         { path: '', component: HomePage },
         { path: 'about', component: AboutPage },
+        { path: 'room/:id', component: RoomPage },
       ],
     },
   ],
