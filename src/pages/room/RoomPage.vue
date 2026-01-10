@@ -56,7 +56,7 @@ onMounted(async () => {
 
     // Ждем, пока DOM обновится после установки loading = false
     await nextTick()
-    
+
     // Теперь инициализируем плеер, когда элемент точно есть в DOM
     await initializePlayer()
   } catch (err: any) {
@@ -123,7 +123,7 @@ function handleResize() {
         const rect = container.getBoundingClientRect()
         const width = Math.floor(rect.width || 640)
         const height = Math.floor(rect.height || 360)
-        
+
         try {
           if (typeof player.setSize === 'function') {
             player.setSize(width, height)
@@ -172,7 +172,7 @@ onUnmounted(() => {
     }
     player = null
   }
-  
+
   playerReady.value = false
 })
 
@@ -187,12 +187,12 @@ async function initializePlayer() {
   // Ждем несколько тиков, чтобы гарантировать рендер элемента
   await nextTick()
   await nextTick()
-  
+
   // Проверяем, что элемент существует в DOM с несколькими попытками
   let playerElement = document.getElementById('youtube-player')
   let retries = 0
   while (!playerElement && retries < 10) {
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 100))
     playerElement = document.getElementById('youtube-player')
     retries++
   }
@@ -247,9 +247,9 @@ async function initializePlayer() {
       width: Math.floor(width),
       height: Math.floor(height),
       playerVars: {
-        autoplay: 0,
         controls: 1,
         rel: 0,
+        autoplay: 0,
         modestbranding: 1,
         playsinline: 1,
         enablejsapi: 1,
@@ -286,7 +286,7 @@ function onPlayerReady(event: any) {
 
   // Запрашиваем синхронизацию при готовности плеера
   socketService.emit('video:sync_request', roomId)
-  
+
   // Отслеживаем перемотку через периодическую проверку
   let lastTime = 0
   try {
@@ -302,15 +302,30 @@ function onPlayerReady(event: any) {
       const currentTime = player.getCurrentTime() || 0
       const timeDiff = Math.abs(currentTime - lastTime)
       const playerState = player.getPlayerState()
-      
-      // Если разница больше 2 секунд и не воспроизводится, значит произошла перемотка
-      if (timeDiff > 2 && playerState !== 1) {
+
+      // Если разница больше 2 секунд, значит произошла перемотка
+      if (timeDiff > 2) {
+        // Ставим на паузу при перемотке
+        if (playerState === 1) {
+          // Если видео играет, ставим на паузу
+          isLocalAction.value = true
+          player.pauseVideo()
+          socketService.emit('video:pause', {
+            roomId,
+            currentTime,
+          })
+          setTimeout(() => {
+            isLocalAction.value = false
+          }, 500)
+        }
+
+        // Отправляем событие перемотки
         socketService.emit('video:seek', {
           roomId,
           currentTime,
         })
       }
-      
+
       lastTime = currentTime
     } catch (e) {
       console.error('Error in seek interval:', e)
@@ -411,15 +426,15 @@ function handleVideoPlay(data: { currentTime: number; timestamp: number }) {
   try {
     // Устанавливаем флаг перед операциями
     isLocalAction.value = true
-    
+
     // Рассчитываем задержку в секундах
     const networkDelay = (Date.now() - data.timestamp) / 1000
-    
+
     // Если видео было на паузе, просто перематываем и запускаем
     // Если видео играло, нужно учесть время, которое прошло во время задержки сети
     const playerState = player.getPlayerState()
     let targetTime = data.currentTime
-    
+
     if (playerState === 1) {
       // Если видео уже играет, добавляем задержку сети к времени
       targetTime = data.currentTime + networkDelay
@@ -427,7 +442,7 @@ function handleVideoPlay(data: { currentTime: number; timestamp: number }) {
       // Если видео на паузе, просто добавляем небольшую компенсацию
       targetTime = data.currentTime + Math.min(networkDelay * 0.5, 0.1)
     }
-    
+
     targetTime = Math.max(0, targetTime)
 
     // Сначала перематываем
@@ -458,14 +473,14 @@ function handleVideoPause(data: { currentTime: number; timestamp: number }) {
   try {
     // Устанавливаем флаг перед операциями
     isLocalAction.value = true
-    
+
     // Рассчитываем задержку в секундах
     const networkDelay = (Date.now() - data.timestamp) / 1000
-    
+
     // Для паузы учитываем, что видео продолжало играть во время задержки сети
     const playerState = player.getPlayerState()
     let targetTime = data.currentTime
-    
+
     if (playerState === 1) {
       // Если видео играет, добавляем задержку сети
       targetTime = data.currentTime + networkDelay
@@ -473,7 +488,7 @@ function handleVideoPause(data: { currentTime: number; timestamp: number }) {
       // Если уже на паузе, используем время с небольшой компенсацией
       targetTime = data.currentTime + Math.min(networkDelay * 0.5, 0.05)
     }
-    
+
     targetTime = Math.max(0, targetTime)
 
     // Сначала перематываем
@@ -504,14 +519,14 @@ function handleVideoSeek(data: { currentTime: number; timestamp: number }) {
   try {
     // Устанавливаем флаг перед операцией
     isLocalAction.value = true
-    
+
     // Рассчитываем задержку в секундах
     const networkDelay = (Date.now() - data.timestamp) / 1000
-    
+
     // Для перемотки учитываем, что видео могло продолжать играть во время задержки сети
     const playerState = player.getPlayerState()
     let targetTime = data.currentTime
-    
+
     if (playerState === 1) {
       // Если видео играет, добавляем задержку сети
       targetTime = data.currentTime + networkDelay
@@ -519,11 +534,17 @@ function handleVideoSeek(data: { currentTime: number; timestamp: number }) {
       // Если на паузе, используем время с минимальной компенсацией
       targetTime = data.currentTime + Math.min(networkDelay * 0.3, 0.05)
     }
-    
+
     targetTime = Math.max(0, targetTime)
 
+    // Перематываем
     if (typeof player.seekTo === 'function') {
       player.seekTo(targetTime, true)
+    }
+
+    // Ставим на паузу после перемотки
+    if (typeof player.pauseVideo === 'function') {
+      player.pauseVideo()
     }
 
     // Увеличиваем время блокировки
@@ -574,21 +595,17 @@ function copyLink() {
         <CardHeader>
           <CardTitle class="flex items-center justify-between">
             <span>Room: {{ room.id.slice(0, 8) }}...</span>
-            <span class="text-sm font-normal">
-              Participants: {{ participants }}
-            </span>
+            <span class="text-sm font-normal"> Participants: {{ participants }} </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div 
-            id="youtube-player-container" 
+          <div
+            id="youtube-player-container"
             class="aspect-video w-full bg-black rounded-lg overflow-hidden"
-            style="position: relative; min-height: 360px;"
-          >
-            <div 
-              id="youtube-player" 
-              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
-            ></div>
+            style="position: relative; min-height: 360px">
+            <div
+              id="youtube-player"
+              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%"></div>
           </div>
         </CardContent>
       </Card>
@@ -602,11 +619,8 @@ function copyLink() {
             <input
               :value="currentUrl"
               readonly
-              class="flex-1 px-3 py-2 border rounded-md text-sm"
-            />
-            <Button size="sm" @click="copyLink">
-              Copy Link
-            </Button>
+              class="flex-1 px-3 py-2 border rounded-md text-sm" />
+            <Button size="sm" @click="copyLink"> Copy Link </Button>
           </div>
         </CardContent>
       </Card>
