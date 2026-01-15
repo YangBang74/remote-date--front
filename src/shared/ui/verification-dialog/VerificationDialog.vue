@@ -175,7 +175,7 @@ const handleClose = () => {
               @keydown="(e) => handleKeyDown(index, e)"
               @keyup.enter="handleVerify" />
           </div>
-          <p v-if="error" class="text-sm text-destructive text-center mt-2">{{ error }}</p>
+          <p v-if="error" class="text-sm text-left text-destructive mt-2">{{ error }}</p>
         </div>
       </div>
 

@@ -21,10 +21,19 @@ export interface RegisterResponse {
 export interface RegisterCheckResponse {
   message: string
   userId: string
+  accessToken: string
+  refreshToken: string
 }
 
 export interface LoginResponse {
   message: string
   userId: string
   email: string
+  accessToken: string
+  refreshToken: string
+}
+
+export interface RefreshTokenResponse {
+  accessToken: string
+  refreshToken: string
 }
