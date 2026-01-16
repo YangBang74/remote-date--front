@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Home, BarChart, Settings, Users, MessageCircle } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 import {
@@ -13,8 +14,34 @@ import {
   useSidebar,
 } from '@/shared/ui/sidebar'
 import { Avatar, AvatarImage, AvatarFallback } from '@/shared/ui/avatar'
+import { authStore } from '@/shared/store/auth.store'
 
 const { state } = useSidebar()
+
+// Используем общий state из authStore
+const user = authStore.user
+
+// Вычисляем отображаемое имя
+const displayName = computed(() => {
+  if (!user.value) return 'Guest'
+
+  if (user.value.firstName && user.value.lastName) {
+    return `${user.value.firstName} ${user.value.lastName}`
+  }
+
+  return user.value.email
+})
+
+// Вычисляем инициалы для аватара
+const avatarInitials = computed(() => {
+  if (!user.value) return 'G'
+
+  if (user.value.firstName && user.value.lastName) {
+    return `${user.value.firstName[0]}${user.value.lastName[0]}`.toUpperCase()
+  }
+
+  return user.value.email?.[0]?.toUpperCase() || ''
+})
 
 // Menu items.
 const items = [
@@ -65,15 +92,15 @@ const items = [
               to="/profile"
               class="flex items-center gap-3 px-2 py-2 my-2 bg-muted rounded-md">
               <Avatar v-if="state === 'expanded'">
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
+                <AvatarImage :src="user?.email || ''" />
+                <AvatarFallback>{{ avatarInitials }}</AvatarFallback>
               </Avatar>
-              <span class="text-sm font-medium whitespace-nowrap">John Doe</span>
+              <span class="text-sm font-medium whitespace-nowrap">{{ displayName }}</span>
             </RouterLink>
             <RouterLink v-else to="/profile" class="flex items-center gap-3 py-2 my-2 rounded-md">
               <Avatar>
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>CN</AvatarFallback>
+                <AvatarImage :src="user?.email || ''" />
+                <AvatarFallback>{{ avatarInitials }}</AvatarFallback>
               </Avatar>
             </RouterLink>
           </Transition>

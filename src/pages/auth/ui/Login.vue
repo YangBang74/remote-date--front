@@ -12,6 +12,7 @@ import {
   Label,
 } from '@/shared/ui'
 import { authAPI } from '@/shared/api/auth.api'
+import { authStore } from '@/shared/store/auth.store'
 
 const emit = defineEmits<{
   (e: 'register'): void
@@ -41,7 +42,9 @@ const handleLogin = async (e: Event) => {
       password: password.value,
     })
 
-    // Можно добавить сохранение токена/сессии здесь
+    // Обновляем данные пользователя в store
+    await authStore.refreshUser()
+    
     console.log('Login successful:', result)
     router.push('/')
   } catch (err: any) {

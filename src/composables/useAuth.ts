@@ -5,6 +5,8 @@ import { tokenService } from '@/shared/api/token.service'
 const user = ref<{
   userId: string
   email: string
+  firstName?: string
+  lastName?: string
   verified: boolean
   createdAt: string
 } | null>(null)

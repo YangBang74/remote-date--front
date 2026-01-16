@@ -199,6 +199,8 @@ class AuthAPI {
   async getMe(): Promise<{
     userId: string
     email: string
+    firstName?: string
+    lastName?: string
     verified: boolean
     createdAt: string
   }> {

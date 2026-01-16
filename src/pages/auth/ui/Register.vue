@@ -13,6 +13,7 @@ import {
   VerificationDialog,
 } from '@/shared/ui'
 import { authAPI } from '@/shared/api/auth.api'
+import { authStore } from '@/shared/store/auth.store'
 
 const emit = defineEmits<{
   (e: 'login'): void
@@ -65,10 +66,10 @@ const handleRegister = async (e: Event) => {
   }
 }
 
-const handleVerified = (userId: string) => {
-  // После успешной верификации можно перенаправить или показать сообщение
+const handleVerified = async (userId: string) => {
+  // После успешной верификации обновляем данные пользователя в store
   console.log('User verified:', userId)
-  // Можно добавить сохранение токена/сессии здесь
+  await authStore.refreshUser()
   router.push('/')
 }
 
